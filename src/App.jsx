@@ -123,28 +123,30 @@ export default function App() {
     }
   }
 
-  function toggleHtmlPages() {
-    
-    return (
-      <ul className="html-files">
-        {entries.map((entry) => {
-          if (entry.title.endsWith(".html")) {
-            return (
-              <li className="html-file">
-                <button
-                  className={
-                    entry.isOpen ? "html-button-selected" : "html-button"
-                  }
-                >
-                  {entry.title}
-                </button>
-              </li>
-            );
-          }
-        })}
-      </ul>
-    );
+  function togglePages(fileType) {
+    const pages = []
+    for (const entry of entries) {
+      if (entry.title.endsWith(fileType)) {
+        pages.push(entry)
+      } else if (entry.type === 'folder') {
+        toggleNestedPages(fileType, entry.children, pages)
+      }
+    }
+    return pages
   }
+
+  function toggleNestedPages(fileType, children, pages) {
+    for (const entry of children) {
+      if (entry.title.endsWith(fileType)) {
+        pages.push(entry)
+      } else if (entry.type === 'folder') {
+        toggleNestedPages(fileType, entry.children, pages)
+      }
+    }
+    return pages
+  }
+
+  
 
   function displayEditors(entries) {
     return entries.map((entry) => {
@@ -207,6 +209,28 @@ export default function App() {
     }
   }
 
+  function loadFileContentName(fileName) {
+    for (const entry of entries) {
+      if (entry.title === fileName) {
+        return entry
+      } else if (entry.type === 'folder') {
+        const nestedEntry = loadNestedFileContentName(fileName, entry.children)
+        if (nestedEntry) return nestedEntry
+      }
+    }
+  }
+
+  function loadNestedFileContentName(fileName, children) {
+    for (const entry of children) {
+      if (entry.title === fileName) {
+        return entry
+      } else if (entry.type === 'folder') {
+        const nestedEntry = loadNestedFileContentName(fileName, entry.children)
+        if (nestedEntry) return nestedEntry
+      }
+    }
+  }
+
   return (
     <div className="app">
       <FileExplorer
@@ -232,6 +256,8 @@ export default function App() {
           showHtmlPages={showHtmlPages}
           entries={entries}
           toggleFile={toggleFile}
+          loadFileContentName={loadFileContentName}
+          togglePages={togglePages}
         />
       </div>
     </div>
